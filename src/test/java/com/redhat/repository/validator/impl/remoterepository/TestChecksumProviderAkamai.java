@@ -1,7 +1,5 @@
 package com.redhat.repository.validator.impl.remoterepository;
 
-import static org.junit.Assert.assertEquals;
-
 import java.net.URI;
 
 import org.apache.http.HttpResponse;
@@ -12,7 +10,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.redhat.repository.validator.impl.remoterepository.ChecksumProviderAkamai;
+import static org.junit.Assert.assertEquals;
 
 @Ignore("Repository at https://maven.repository.redhat.com/techpreview/all/ is not served by Akamai anymore")
 public class TestChecksumProviderAkamai {
@@ -27,7 +25,8 @@ public class TestChecksumProviderAkamai {
         HttpUriRequest httpRequest = RequestBuilder.head().setUri(remoteArtifact).build();
         HttpResponse httpResponse = httpClient.execute(httpRequest);
 
-        String remoteChecksum = providerAkamai.getRemoteArtifactChecksum(remoteArtifact, httpResponse);
+        String remoteChecksum = providerAkamai.getRemoteArtifactChecksum(remoteArtifact, httpResponse, false,
+                                                                         null);
         assertEquals("7368fd4e4d4b437d895d6c650084b9b0", remoteChecksum);
     }
 

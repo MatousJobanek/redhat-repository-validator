@@ -1,15 +1,23 @@
 package com.redhat.repository.validator.impl.remoterepository;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Map;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
 
 public class ChecksumProviderNginx implements ChecksumProvider {
 
     @Override
-    public String getRemoteArtifactChecksum(URI remoteArtifact, HttpResponse httpResponse) {
+    public String getRemoteArtifactChecksum(URI remoteArtifact, HttpResponse httpResponse, boolean cache,
+        Map<String, String> checksumRemoteCache) {
         Header etagHeader = httpResponse.getFirstHeader("ETag");
         if (etagHeader != null) {
             String etagValue = etagHeader.getValue();
@@ -26,7 +34,29 @@ public class ChecksumProviderNginx implements ChecksumProvider {
         File file = new File(localArtifact);
         return String.format("%1$x-%2$x", file.lastModified() / 1000, file.length());
     }
-    
+
+    @Override public String getLocalRemoteHash(CloseableHttpClient httpClient, URI localArtifact,
+        String remoteRepositoryUrl, Map<String, String> checksumLocalCache)
+        throws IOException, RemoteRepositoryCompareException, URISyntaxException {
+
+        //        localArtifact = new URI(localArtifact.getPath().replace("http:/", "http://"));
+        HttpUriRequest httpRequestLocal = RequestBuilder.head().setUri(localArtifact).build();
+        HttpResponse httpResponseLocal = httpClient.execute(httpRequestLocal);
+        int httpStatusCodeLocal = httpResponseLocal.getStatusLine().getStatusCode();
+
+        if (httpStatusCodeLocal == HttpStatus.SC_OK) {
+            return getRemoteArtifactChecksum(localArtifact, httpResponseLocal, true, null);
+
+        } else if (httpStatusCodeLocal == HttpStatus.SC_NOT_FOUND) {
+            throw new RemoteRepositoryCompareException(
+                "Remote repository [" + remoteRepositoryUrl + "] doesn't contain artifact " + localArtifact);
+        } else {
+            throw new RemoteRepositoryCompareException(
+                "Remote repository [" + remoteRepositoryUrl + "] returned " + httpResponseLocal.getStatusLine()
+                    .toString() + " for artifact " + localArtifact);
+        }
+    }
+
 }
 
 /*

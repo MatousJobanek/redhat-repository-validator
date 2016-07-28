@@ -1,11 +1,5 @@
 package com.redhat.repository.validator;
 
-import static org.apache.commons.io.filefilter.FileFilterUtils.and;
-import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
-import static org.apache.commons.io.filefilter.FileFilterUtils.notFileFilter;
-import static org.apache.commons.io.filefilter.FileFilterUtils.trueFileFilter;
-import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,6 +9,15 @@ import java.util.Properties;
 
 import javax.inject.Named;
 
+import com.redhat.repository.validator.impl.bom.BomFilter;
+import com.redhat.repository.validator.impl.bom.BomFilterSimple;
+import com.redhat.repository.validator.impl.remoterepository.ChecksumProviderNexus;
+import com.redhat.repository.validator.impl.remoterepository.ChecksumProviderNginx;
+import com.redhat.repository.validator.impl.remoterepository.RemoteRepositoryCollisionValidator;
+import com.redhat.repository.validator.internal.DepthOneOptionalDependencySelector;
+import com.redhat.repository.validator.internal.LocalRepositoryModelResolver;
+import com.redhat.repository.validator.internal.LogRepositoryListener;
+import com.redhat.repository.validator.internal.LogTransferListener;
 import org.apache.commons.io.filefilter.AbstractFileFilter;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.lang3.ArrayUtils;
@@ -51,15 +54,11 @@ import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
-import com.redhat.repository.validator.impl.bom.BomFilter;
-import com.redhat.repository.validator.impl.bom.BomFilterSimple;
-import com.redhat.repository.validator.impl.remoterepository.ChecksumProviderNexus;
-import com.redhat.repository.validator.impl.remoterepository.ChecksumProviderNginx;
-import com.redhat.repository.validator.impl.remoterepository.RemoteRepositoryCollisionValidator;
-import com.redhat.repository.validator.internal.DepthOneOptionalDependencySelector;
-import com.redhat.repository.validator.internal.LocalRepositoryModelResolver;
-import com.redhat.repository.validator.internal.LogRepositoryListener;
-import com.redhat.repository.validator.internal.LogTransferListener;
+import static org.apache.commons.io.filefilter.FileFilterUtils.and;
+import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
+import static org.apache.commons.io.filefilter.FileFilterUtils.notFileFilter;
+import static org.apache.commons.io.filefilter.FileFilterUtils.trueFileFilter;
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
 @Configuration
 @ComponentScan(
@@ -140,7 +139,7 @@ public class AppConfig {
     @Scope(SCOPE_PROTOTYPE)
     public ValidatorContext validatorContext() {
         return new ValidatorContext(
-                  new File(validatedRepository),
+                  validatedRepository,
                   new File(validatedDistribution),
                   effectiveRemoteRepositories(),
                   Arrays.asList(exceptionFilters != null ? exceptionFilters : new ExceptionFilter[]{}));

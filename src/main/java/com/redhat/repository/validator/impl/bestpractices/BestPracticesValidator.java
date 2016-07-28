@@ -1,25 +1,20 @@
 package com.redhat.repository.validator.impl.bestpractices;
 
-import static com.redhat.repository.validator.internal.Utils.relativize;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.springframework.util.CollectionUtils.isEmpty;
-
-import java.util.Iterator;
-
 import javax.inject.Inject;
 import javax.inject.Named;
-
-import org.apache.commons.io.filefilter.IOFileFilter;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.Repository;
-import org.apache.maven.model.building.ModelBuildingResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.redhat.repository.validator.Validator;
 import com.redhat.repository.validator.ValidatorContext;
 import com.redhat.repository.validator.internal.ValidatorSupport;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.Repository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 // https://docs.sonatype.org/display/Repository/Central+Sync+Requirements
 @Named
@@ -47,18 +42,18 @@ public class BestPracticesValidator implements Validator {
 
     @Override
     public void validate(ValidatorContext ctx) {
-        Iterator<ModelBuildingResult> modelIterator = validatorSupport.modelIterator(ctx, fileFilter);
-        while (modelIterator.hasNext()) {
-            ModelBuildingResult modelResult = modelIterator.next();
-            if (modelResult != null) {
-                Model rawModel = modelResult.getRawModel();
-                Model effectiveModel = modelResult.getEffectiveModel();
-                if (rawModel != null && effectiveModel != null) {
-                    logger.trace("validating {}", relativize(ctx, rawModel.getPomFile()));
-                    validateBestPractices(ctx, rawModel, effectiveModel);
-                }
-            }
-        }
+//        Iterator<ModelBuildingResult> modelIterator = validatorSupport.modelIterator(ctx, fileFilter);
+//        while (modelIterator.hasNext()) {
+//            ModelBuildingResult modelResult = modelIterator.next();
+//            if (modelResult != null) {
+//                Model rawModel = modelResult.getRawModel();
+//                Model effectiveModel = modelResult.getEffectiveModel();
+//                if (rawModel != null && effectiveModel != null) {
+//                    logger.trace("validating {}", relativize(ctx, rawModel.getPomFile()));
+//                    validateBestPractices(ctx, rawModel, effectiveModel);
+//                }
+//            }
+//        }
     }
 
     private void validateBestPractices(ValidatorContext ctx, Model rawModel, Model effectiveModel) {

@@ -1,7 +1,5 @@
 package com.redhat.repository.validator.impl.remoterepository;
 
-import static org.junit.Assert.assertEquals;
-
 import java.net.URI;
 
 import org.apache.http.HttpResponse;
@@ -11,7 +9,7 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.Test;
 
-import com.redhat.repository.validator.impl.remoterepository.ChecksumProviderNexus;
+import static org.junit.Assert.assertEquals;
 
 public class TestChecksumProviderNexus {
 
@@ -25,7 +23,8 @@ public class TestChecksumProviderNexus {
         HttpUriRequest httpRequest = RequestBuilder.head().setUri(remoteArtifact).build();
         HttpResponse httpResponse = httpClient.execute(httpRequest);
 
-        String remoteChecksum = providerNexus.getRemoteArtifactChecksum(remoteArtifact, httpResponse);
+        String remoteChecksum = providerNexus.getRemoteArtifactChecksum(remoteArtifact, httpResponse, false,
+                                                                        null);
         assertEquals("e6f1e89880e645c66ef9c30d60a68f7e26f3152d", remoteChecksum);
     }
 

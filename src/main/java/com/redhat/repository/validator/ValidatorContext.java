@@ -1,15 +1,17 @@
 package com.redhat.repository.validator;
 
-import static com.redhat.repository.validator.internal.Utils.relativize;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.repository.RemoteRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static com.redhat.repository.validator.internal.Utils.relativize;
 
 public class ValidatorContext {
 
@@ -21,16 +23,29 @@ public class ValidatorContext {
     private final List<ExceptionFilter> exceptionFilters;
     private final List<ValidationError> errors = new ArrayList<ValidationError>();
     private final List<ValidationError> ignoredErrors = new ArrayList<ValidationError>();
+    private final String validatedRepo;
+    private boolean isDirectory;
+    private Map<String, String> checksumLocalCache = new ConcurrentHashMap<>();
+    private Map<String, String> checksumRemoteCache = new ConcurrentHashMap<>();
 
-    public ValidatorContext(File validatedRepository, File validatedDistribution, List<RemoteRepository> remoteRepositories) {
+    public ValidatorContext(String validatedRepository, File validatedDistribution, List<RemoteRepository> remoteRepositories) {
         this(validatedRepository, validatedDistribution, remoteRepositories, null);
     }
 
-    public ValidatorContext(File validatedRepository, File validatedDistribution, List<RemoteRepository> remoteRepositories, List<ExceptionFilter> exceptionFilters) {
-        this.validatedRepository = validatedRepository;
+    public ValidatorContext(File validatedRepository, File validatedDistribution, List<RemoteRepository> remoteRepositories) {
+        this(validatedRepository.getPath(), validatedDistribution, remoteRepositories, null);
+    }
+
+    public ValidatorContext(String validatedRepository, File validatedDistribution, List<RemoteRepository> remoteRepositories, List<ExceptionFilter> exceptionFilters) {
+        this.validatedRepository = new File(validatedRepository);
+        this.validatedRepo = validatedRepository;
         this.validatedDistribution = validatedDistribution; 
         this.remoteRepositories = remoteRepositories;
         this.exceptionFilters = exceptionFilters;
+    }
+
+    public ValidatorContext(File validatedRepository, File validatedDistribution, List<RemoteRepository> remoteRepositories, List<ExceptionFilter> exceptionFilters) {
+        this(validatedRepository.getPath(), validatedDistribution, remoteRepositories, exceptionFilters);
     }
 
     public File getValidatedRepository() {
@@ -49,12 +64,13 @@ public class ValidatorContext {
         return errors.isEmpty();
     }
 
-    public void addError(Validator validator, File file, Exception e) {
+    public synchronized void addError(Validator validator, File file, Exception e) {
         if( isIgnored(validator, file, e) ) {
             logger.debug("ignoring exception `{}: {}`", e.getClass().getSimpleName(), e.getMessage());
             ignoredErrors.add(new ValidationError(validator, e, file));
         } else {
-            logger.debug("for `{}` register exception `{}: {}`", relativize(this, file), e.getClass().getSimpleName(), e.getMessage());
+            logger.debug("for `{}` register exception `{}: {}`", file.getPath().startsWith("http") ? file.getPath() : relativize(
+                this, file), e.getClass().getSimpleName(), e.getMessage());
             errors.add(new ValidationError(validator, e, file));
         }
     }
@@ -87,7 +103,9 @@ public class ValidatorContext {
     public List<Exception> getExceptions() {
         List<Exception> result = new ArrayList<Exception>();
         for (ValidationError error : errors) {
-            result.add(error.getException());
+            if (error != null) {
+                result.add(error.getException());
+            }
         }
         return Collections.unmodifiableList(result);
     }
@@ -113,5 +131,34 @@ public class ValidatorContext {
         }
         return Collections.unmodifiableList(result);
     }
-    
+
+    public String getValidatedRepo() {
+        return validatedRepo;
+    }
+
+    public boolean isDirectory()
+    {
+        return isDirectory;
+    }
+
+    public void setIsDirectory(boolean isDirectory)
+    {
+        this.isDirectory = isDirectory;
+    }
+
+    public Map<String, String> getChecksumLocalCache() {
+        return checksumLocalCache;
+    }
+
+    public void setChecksumLocalCache(Map<String, String> checksumLocalCache) {
+        this.checksumLocalCache = checksumLocalCache;
+    }
+
+    public Map<String, String> getChecksumRemoteCache() {
+        return checksumRemoteCache;
+    }
+
+    public void setChecksumRemoteCache(Map<String, String> checksumRemoteCache) {
+        this.checksumRemoteCache = checksumRemoteCache;
+    }
 }
